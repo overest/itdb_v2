@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% block title %}
+    资产查询
+{% endblock %}
+{% block content %}
+    <div class="col-xs-12">
+        <!-- 搜索查询 -->
+        <div style="margin-left: 35px;width: 40%">
+            <div class="row">
+                <div class="form-group input-group">
+                    <form>
+                        {% csrf_token %}
+                        {{ form }}
+                    </form>
+                    <span class="input-group-btn">
+                        <button id="search_button" class="btn btn-default ">
+                                    查询
+                            <i class="glyphicon glyphicon-search"></i>
+                        </button>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 资产详情编辑页面-->
+    <div class="col-xs-12" style="margin-left: 20px">
+        <!-- 资产列表 -->
+        <div class="col-xs-6" style="padding-left: 0px">
+            <div id="asset_edit_content_form" style="background-color: #307ecc;color: #FFF;font-size: 14px;line-height: 38px;padding-left: 12px;margin-bottom: 1px">
+                资产信息
+                <button type="button" onclick="download()" class="right btn btn-primary pull-right btn-success" style="height:38px;" >
+                    下载文件
+                </button>
+            </div>
+            <div class="table-responsive">
+                <div class="dataTables_wrapper">
+                    <table id="asset_list_table" class="table  table-striped table-hover table-bordered dataTable" style="margin-left: 0px;">
+                        <thead id="asset_table_head">
+                            <!--
+                            <tr role="row" id="asset_table_head">
+                                <th class="sorting_asc_disabled" >资产属性</th>
+                                <th class="sorting_asc_disabled" >资产编号</th>
+                                <th class="sorting_asc_disabled" >资产SN</th>
+                                <th class="sorting_asc_disabled" >资产类别</th>
+                                <th class="sorting_asc_disabled" >资产型号</th>
+                                <th class="sorting_asc_disabled" >资产状态</th>
+                                <th class="sorting_asc_disabled" >使用人</th>
+                                <th class="sorting_asc_disabled" >办公地点</th>
+                                <th class="sorting_asc_disabled" >更新时间</th>
+                                <th class="sorting_asc_disabled" >备注</th>
+                            </tr>
+                            -->
+                        </thead>
+
+
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- 资产详情 -->
+        <div class="col-xs-6">
+            <div>
+                <div class="col-xs-12">
+                    <ul class="nav nav-tabs" style="background-color: #eff3f8;border: 1px solid #c5d0dc;">
+                        <li class="active"><a id="detail_panel_tab" data-toggle="tab" href="#detail_panel_content" title="资产详情" >资产详情</a></li>
+                        <li><a id="detail_log_tab" data-toggle="tab" href="#asset_log_panel_content" title="操作信息" >操作信息</a></li>
+                    </ul>
+                    <div>
+                        <div style="border: 1px solid #c5d0dc;padding: 0;border-top: none">
+                            <div id="detail_panel_content" class="tab-pane active">
+                                <div id="asset_detail_panel" >
+                                    <div id="asset_detail_tbar">
+                                        <div>
+                                            <a id="st_dev_btn" class="btn btn-primary hide" href="">出库</a>
+                                        </div>
+                                        <div>
+                                            <a id="si_dev_btn" class="btn btn-primary hide" href="">入库</a>
+                                        </div>
+                                    </div>
+                                    <table id="asset_detail_table" class="table table-striped table-bordered table-hover ">
+                                        <thead></thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div id="asset_log_panel_content" class="tab-pane hide">
+                                <div id="asset_log_panel">
+                                    <table id="asset_log_table" class="table table-striped table-bordered table-hover">
+                                        <thead></thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 弹出查询条件为空时的对话框 -->
+    <div class="modal fade" id="myModal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button id="x_x" type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel" style="color: rgb(184, 30, 162); font-size: 23px;">
+                         <i class="glyphicon glyphicon-ban-circle"></i>
+                        提示
+                    </h4>
+			    </div>
+                <div class="modal-body" id="query_null" style="color: rgb(184, 30, 162); font-size: 15px;">
+				    查询条件为空，请确认！
+			    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" id="off_modal">关闭
+                    </button>
+			    </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(function () {
+            function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            var csrftoken = getCookie('csrftoken');
+            function csrfSafeMethod(method) {
+                // these HTTP methods do not require CSRF protection
+                return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+            }
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                }
+            });
+            $("#detail_panel_tab").bind("click",function () {
+                if ($("#detail_panel_content").hasClass('hide')){
+                    $("#detail_panel_content").removeClass('hide')
+                }
+                $("#asset_log_panel_content").addClass('hide');
+            });
+            $("#detail_log_tab").bind('click',function () {
+                if ($("#asset_log_panel_content").hasClass('hide')){
+                    $("#asset_log_panel_content").removeClass('hide');
+                }
+                $("#detail_panel_content").addClass('hide')
+            });
+
+            $.asset_detail_func()
+        });
+                    //下载
+        function download() {
+            var owner= $("#id_search_key").val();
+            if (owner.length == 0){
+                var url = "/asset_manage/export/asset/all/"
+            }else{
+                var url = "/asset_manage/export/asset/" + owner + "/"
+            }
+            window.location.href = url
+        }
+    </script>
+{% endblock %}

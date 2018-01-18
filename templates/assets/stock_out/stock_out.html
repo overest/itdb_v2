@@ -1,0 +1,481 @@
+{% extends 'base.html' %}
+{% block title %}
+    资产出库
+{% endblock %}
+{% block content %}
+    <div class="col-xs-12">
+        <ul class="nav nav-tabs" style="padding-top: 6px;background-color: #eff3f8;border: 1px solid #c5d0dc;">
+            <li class="active">
+                <a id="a1" data-toggle="tab" href="#asset_normal">固定资产单条出库</a>
+            </li>
+            <li>
+                <a id="a2" data-toggle="tab" href="#consume_out">批量出库</a>
+            </li>
+        </ul>
+        <div style="border: 1px solid #c5d0dc;padding: 16px 12px;position: relative;z-index: 11;border-top: none">
+            <div id="asset_normal" class="tab-pane active">
+        <!-- 搜索框 -->
+                <div style="margin-left: 3px;width: 50%">
+                    <div class="row">
+                        <div class="form-group">
+                            <div class="input-group" >
+                                {% csrf_token %}
+                                {{ search_form }}
+                                <span class="input-group-btn">
+                                    <button id="search_button" class="btn btn-default ">
+                                            查询
+                                        <i class="glyphicon glyphicon-search"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div>
+                      <!--  <form class="form-horizontal"> -->
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <!-- 资产相关信息 -->
+                                <div class="panel panel-default" style="width: 60%;float: left;margin-left: -12px;">
+                                    <div class="panel-heading">
+                                        <strong>资产相关信息</strong>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div>
+                                            <form class="form-horizontal" id="asset_info_form">
+                                                {% csrf_token %}
+                                                <div class="form-group" style="margin-right: 20px">
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.asset_id.label }}：</label>
+{#                                                        <label class="col-sm-2 control-label" style="padding-right: 0px;font-size: 14px" for="asset_id">{{ asset_detail_info_form.asset_id.label }}：</label>#}
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.asset_id }}</div>
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.asset_model.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.asset_model }}</div>
+                                                </div>
+                                                <div class="form-group" style="margin-right: 20px">
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.asset_provider.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.asset_provider }}</div>
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.device_model.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.device_model }}</div>
+                                                </div>
+                                                <div class="form-group" style="margin-right: 20px">
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.sn.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.sn }}</div>
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.product_conf.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.product_conf }}</div>
+                                                </div>
+                                                <div class="form-group" style="margin-right: 20px">
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.mac_addr.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.mac_addr }}</div>
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.company_info.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.company_info }}</div>
+                                                </div>
+                                                <div class="form-group" style="margin-right: 20px">
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.asset_status.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.asset_status }}</div>
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.user_name.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.user_name }}</div>
+                                                </div>
+                                                <div class="form-group" style="margin-right: 20px">
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.store_place.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.store_place }}</div>
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.owner.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.owner }}</div>
+                                                </div>
+                                                <div class="form-group" style="margin-right: 20px">
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.office_place.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.office_place }}</div>
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.asset_name.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.asset_name }}</div>
+                                                </div>
+                                                <div class="form-group" style="margin-right: 20px">
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.in_out_reason.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.in_out_reason }}</div>
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.asset_attr.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.asset_attr }}</div>
+                                                </div>
+                                                <div class="form-group" style="margin-right: 20px">
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.buy_time.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.buy_time }}</div>
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.supplier.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.supplier }}</div>
+                                                </div>
+                                                <div class="form-group" style="margin-right: 20px">
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.update_time.label }}：</label>
+                                                    <div class="col-xs-4">{{ asset_detail_info_form.update_time }}</div>
+                                                    <label class="col-xs-2 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_detail_info_form.remark.label }}：</label>
+                                                    <div class="col-xs-4" >{{ asset_detail_info_form.remark }}</div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- 出库信息 -->
+                                <div class="panel panel-default" style="width: 40%;float: right;margin-right: -12px;" id="out_detail_info">
+                                    <div class="panel-heading">
+                                        <strong>出库信息</strong>
+                                    </div>
+                                    <div class="panel-body">
+                                        <form class="form-horizontal" id="stock_operating_form">
+                                            {% csrf_token %}
+                                            <div class="form-group">
+                                                <label class="col-xs-3 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_out_form.asset_id_field.label }}：</label>
+                                                <div class="col-xs-8">{{ asset_out_form.asset_id_field }}</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-xs-3 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_out_form.use_type_field.label }}：</label><span style="color: red" class="glyphicon glyphicon-remove-sign hide"></span>
+                                                <div class="col-xs-8">{{ asset_out_form.use_type_field }}</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-xs-3 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_out_form.asset_status_field.label }}：</label> <span style="color: red" class="glyphicon glyphicon-remove-sign hide"></span>
+                                                <div class="col-xs-8">{{ asset_out_form.asset_status_field }}</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-xs-3 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_out_form.out_reason_field.label }}：</label><span style="color: red" class="glyphicon glyphicon-remove-sign hide"></span>
+                                                <div class="col-xs-8">{{ asset_out_form.out_reason_field }}</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-xs-3 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_out_form.store_place_field.label }}：</label><span style="color: red" class="glyphicon glyphicon-remove-sign hide"></span>
+                                                <div class="col-xs-8">{{ asset_out_form.store_place_field }}</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-xs-3 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_out_form.user_name_field.label }}：</label><span style="color: red" class="glyphicon glyphicon-remove-sign hide"></span>
+                                                <div class="col-xs-8">{{ asset_out_form.user_name_field }}</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-xs-3 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_out_form.office_place_field.label }}：</label><span style="color: red" class="glyphicon glyphicon-remove-sign hide"></span>
+                                                <div class="col-xs-8">{{ asset_out_form.office_place_field }}</div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-xs-3 control-label" style="font-size: 15px;color: #28a4c9;padding-right: 0px">{{ asset_out_form.remark_info.label }}：</label><span style="color: red" class="glyphicon glyphicon-remove-sign hide"></span>
+                                                <div class="col-xs-8">{{ asset_out_form.remark_info }}</div>
+                                            </div>
+                                            <div style="margin-left: 25%;margin-bottom: 10px">
+                                                <button class="btn btn-info " id="stock_out_submit" onclick="submitForm(true)">
+                                                    <i class="glyphicon glyphicon-ok"></i>
+                                                    提交
+                                                </button>
+                                                <button id="stock_out_submit_continue" class="btn btn-info" onclick="submitForm(false)">
+                                                    <i class="glyphicon glyphicon-plus"></i>
+                                                    提交并继续
+                                                </button>
+                                                <button id="submit_reset" class="btn btn-default " type="reset" name="ResetButton">
+                                                    <i class="glyphicon glyphicon-repeat"></i>
+                                                    重置
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="consume_out" class="tab-pane hide">
+                <div id="multi-button" class="tab-pane active">
+                    <div class="alert alert-info">
+                        <button type="button" class="close" data-dismiss="alert">
+                        <i class="icon-remove"></i>
+                    </button>
+                    <strong>
+                        <i class="icon-exclamation-sign"></i>
+                        说明：
+                    </strong>
+                        <br>
+                            1) 请先下载批量入库模板（文件名含有export的文件）<a href="{% url 'asset_manage:download_template' 'batch_excel.zip' %}" class="red">&lt;&lt;&lt;下载点这里&gt;&gt;&gt;</a>
+                        <br>
+                            2) 根据入库模板填写入库信息（文件名含有export的文件）
+                        <br>
+                            3) 选择填写好的模板文件进行导入（文件名含有export的文件）
+                    </div>
+                    <div>
+                        <form action="{% url 'stock_out:batch_stock_out' %}" class="dropzone dz-clickable" id="myDropzoneOut">
+                            {% csrf_token %}
+                            <div class="dz-default dz-message" style="background-image:none;">
+                                <span>
+                                    <span style="font-size: 200%;font-weight: bolder;color: #c0a16b">
+                                        <i class="glyphicon glyphicon-triangle-right" ></i>
+                                        拖拽/选取文件
+                                    </span>
+                                        上传<br>
+                                    <i class="glyphicon glyphicon-cloud-upload" style="font-size: 500%;color: #28a4c9"></i>
+                                </span>
+                            </div>
+                        </form>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+    <!-- 设备状态为非库存时提示不可出库对话框以及弹出查询条件为空时的对话框 -->
+    <div class="modal fade" id="asset_modal" tabindex="-1" role="dialog" aria-labelledby="asset_modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="asset_modal" style="color: rgb(184, 30, 162); font-size: 23px;">
+                         <i class="glyphicon glyphicon-ban-circle"></i>
+                        提示
+                    </h4>
+                </div>
+                <div class="modal-body" id="error_tar" style="color: rgb(184, 30, 162); font-size: 15px;">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭
+                    </button>
+			    </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    <script>
+
+        //出库信息表单验证
+        var stock_operating_form_validate = $("#stock_operating_form").validate({
+            debug:true,
+            rules:{
+                asset_id_field:{
+                    required:true,
+                },
+                use_type_field:{
+                    required:true,
+                },
+                asset_status_field:{
+                     required:true,
+                },
+                out_reason_field:{
+                    required:true,
+                },
+                store_place_field:{
+                    required:true,
+                },
+                user_name_field:{
+                    required:true,
+                },
+                office_place_field:{
+                    required:true,
+                }
+            }
+        });
+
+        $(document).ready(function () {
+            function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            var csrftoken = getCookie('csrftoken');
+            function csrfSafeMethod(method) {
+                // these HTTP methods do not require CSRF protection
+                return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+            }
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                }
+            });
+
+            $("#a1").bind('click',function () {
+                if($("#asset_normal").hasClass('hide')){
+                    $("#asset_normal").removeClass('hide');
+                }
+                $("#consume_out").addClass('hide');
+            });
+            $("#a2").bind('click',function () {
+                if($("#consume_out").hasClass('hide')){
+                    $("#consume_out").removeClass('hide');
+                }
+                $("#asset_normal").addClass('hide');
+
+            });
+
+
+            //查询按钮操作
+            $("#search_button").click(function (e) {
+                e.preventDefault();
+                var search_val = $("#id_search_key").val().toUpperCase();
+                if (search_val.length == 0){
+                    //查询条件为空，弹出提示框
+                    $("#error_tar").text("查询条件为空，请确认！")
+                    $("#asset_modal").modal()
+                }
+                else {
+                    $.ajax({
+                        type:"post",
+                        url:"/asset_manage/asset_info/asset/search/",
+                        data:search_val,
+                        success:function (resp) {
+                            var respJsonObj = JSON.parse(resp);    //将后端处理返回的数据resp转换成json对象
+                            if (respJsonObj.status){
+                                var respData = respJsonObj.data;        //获取respJsonObj的data的值，类型为json字符串
+                                var searchData = $.parseJSON(respData).search_data;
+                                if (searchData.asset_status != "库存"){
+                                    $("#error_tar").text("设备非库存状态，不可出库，请确认！");
+                                    $("#asset_modal").modal()
+                                }
+                                else {
+                                    //将处理好的数据渲染到资产相关信息表单中
+                                    var asset_info_form_attr = [];
+                                    var asset_info_form_input = $("#asset_info_form > div>div").children();
+                                    $.each(asset_info_form_input,function (k,v) {
+                                       asset_info_form_attr[k] = v.name;
+                                    });
+                                    $.each(searchData,function (k1,v1) {
+                                        $.each(asset_info_form_attr,function (k2,v2) {
+                                            if (k1 == v2){
+                                                $("input[name = " + "'" + v2 +"'" + "]").val(v1)
+                                                return true
+                                            }
+                                        })
+                                    });
+                                    $("#id_asset_id_field").val(searchData.asset_id)
+                                }
+                            }else {
+                                $("#error_tar").text("查询结果不存在！！")
+                                $('#asset_modal').modal()
+                            }
+                        }
+                    })
+                }
+            });
+
+            //从资产查询页面跳转过来的出库
+            (function () {
+                var asset_id = window.location.href.split("=")[1]
+                console.log(asset_id)
+                if (asset_id){
+                    $("#id_search_key").val(asset_id)
+                    $("#search_button").trigger('click')
+                }else {
+                    return
+                }
+            })();
+
+            //资产出库信息selecte标签"添加请选择..."字段
+            function select_tags_add_info(select_id) {
+                var tags = $(select_id).children();
+                tags.each(function () {
+                    if ($(this).attr('selected')){
+                        $(this).removeAttr('selected')
+                    }
+                });
+                var labelTag = $(select_id).parent().prev().prev().text();
+                var labelText = labelTag.substring(0,labelTag.lastIndexOf('：'));
+                $(select_id).prepend("<option selected='selected' value=''>请选择" + labelText + "</option>")
+            }
+            jQuery(function () {
+                select_tags_add_info(id_asset_status_field);
+                select_tags_add_info(id_out_reason_field);
+                select_tags_add_info(id_store_place_field);
+                select_tags_add_info(id_use_type_field)
+            });
+
+            //输入使用人后自动匹配其工作地点
+            $("#id_user_name_field").blur(function () {
+                var user_name = $("#id_user_name_field").val();
+                $.ajax({
+                    type:"get",
+                    url:'/asset_manage/asset_info/user/'+ user_name,
+                    success:function (resp) {
+                        var respJsonObj = JSON.parse(resp);    //将后端处理返回的数据resp转换成json对象
+                        if (respJsonObj.status){
+                            var respDataObj = JSON.parse(respJsonObj.data);
+                            var respUserInfo = respDataObj.user_info;
+                            $("#id_office_place_field").val(respUserInfo['office_place'])
+                        }
+                    }
+                })
+            });
+
+            //重置表单
+            $("#submit_reset").trigger("click")
+        });
+    //确认表单提交
+    function submitForm(e) {
+        if (stock_operating_form_validate.form()){
+            var formData = $("#stock_operating_form").serializeArray();
+            //提取表单里的数据
+            var postData = {};
+            for(var i=1;i<formData.length;i++){
+                $.each(formData[i],function () {
+                    postData[formData[i]["name"]] = formData[i]["value"]
+                })
+            }
+            console.log(postData);
+            $.ajax({
+                type:"POST",
+                url:"/stock_out/stock_out/",
+                data:JSON.stringify(postData),
+                contentType: "application/json; charset=utf-8",
+                dataType:"json",
+                success:function (resp) {
+                    console.log(resp.status)
+                    if (resp.status){
+                        $("#error_tar").text("出库成功！");
+                    }else {
+                        $("#error_tar").text("网络错误");
+                    }
+                    $("#asset_modal").modal();
+                    if (e){
+                        $("#asset_modal").on('hide.bs.modal',function () {
+                            $(location).attr('href', '/assets/asset_query/')     //提交按钮，提交后跳转到资产查询
+                        })
+                        } else {
+                        $("#asset_modal").on('hide.bs.modal',function () {
+                            $(location).attr('href', '/stock_out/stock_out/')    //提交并继续按钮，提交后跳转到reload出库页面
+                        })
+                    }
+                }
+            })
+        }
+    }
+    Dropzone.options.myDropzoneOut = {
+//      autoProcessQueue: false,//自动上传
+        maxFilesize: 5.0, // MB
+        maxFiles: 1,//一次性上传的文件数量上限
+        acceptedFiles: ".xls,.xlsx",
+        thumbnailWidth: 300,
+        thumbnailHeight: 300,
+        addRemoveLinks: true,//添加移除文件
+        dictDefaultMessage: "点击或拖拽上传excel",
+        dictCancelUploadConfirmation: '你确定要取消上传吗？',
+        dictMaxFilesExceeded: "您一次最多只能上传1个文件",
+        dictFileTooBig: "文件过大(5.0MB). 上传文件最大支持: 5.0MB.",
+        dictResponseError: '文件上传失败!',
+        dictInvalidFileType: "你不能上传该类型文件,文件类型只能是excel类型。",
+        dictCancelUpload: "取消上传",
+        dictRemoveFile: "删除",
+        uploadMultiple: true,
+        // Dropzone settings
+        init: function () {
+            var myDropzoneOut = this;
+            this.on("sendingmultiple", function () {
+            });
+            this.on("successmultiple", function (files, response) {
+                console.log(files)
+                console.log(response)
+            });
+            this.on("errormultiple", function (files, response) {
+                console.log(files)
+                console.log(response)
+            });
+        }
+    }
+    </script>
+
+{% endblock %}

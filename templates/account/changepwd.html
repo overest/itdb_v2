@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+    {% block title %}
+        修改密码
+    {% endblock %}
+    {% block content %}
+            <h2>修改密码</h2>
+            {% if oldpassword_is_wrong %}
+                <div class="alert alert-warning" style="margin: 0 100px">
+                    <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+                    <h4>错误!</h4>原始密码不正确
+                </div>
+            {% endif %}
+            <div class="container" style="margin-top: 100px">
+                <div class="row">
+                    <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12 "></div>
+                    <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12 ">
+                    <h1>ITDB</h1>
+                    <p> </p>
+                    <form class="form" action="" method="post">
+                        {% csrf_token %}
+                        {{ form }}
+                        <p class="form-actions" style="margin-top: 20px;">
+                            <input type="submit" value="确认" class="btn btn-primary">
+                        </p>
+                    </form>
+                    </div>
+                    <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12 "></div>
+                </div>
+            </div>
+    {% endblock %}

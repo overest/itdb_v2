@@ -1,0 +1,173 @@
+from django.shortcuts import render,HttpResponse
+from django.views.generic.base import View
+import json
+import time
+
+from .forms import AssetQuery,AssetDetailInfo,Asset_in
+from assets.models import AssetInfo,UserProfile,OperationLogs,AssetAttr,AssetModel,AssetName,AssetProvider,AssetStatus,DeviceModel,InOutReasons,Level,OfficePlace,ProductConf,StorePlace,Supplier,UseType
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+import xlrd,datetime,requests
+class CJsonEncoder(json.JSONEncoder):
+    '''Queryset 对象中datetime对象无法json序列化， 重写json序列化方法'''
+    def default(self, o):
+        if isinstance(o,datetime.datetime):
+            return o.strftime('%Y-%m-%d %H:%M:%S')
+        elif isinstance(o,date):
+            return o.strftime('%Y-%m-%d')
+        else:
+            return json.JSONEncoder.default(self,o)
+# Create your views here.
+class BaseResponse(object):
+    def __init__(self):
+        self.status = True
+        self.data = None
+        self.message = None
+
+
+class Stock_in(View):
+    @method_decorator(login_required)
+    def get(self,request,*args,**kwargs):
+        asset_id = request.GET.get('asset_id')
+
+        search_form = AssetQuery()
+        asset_detail_info_form = AssetDetailInfo()
+        asset_in_form = Asset_in(request.user.username)
+        return render(request, "assets/stock_in/stock_in.html",
+                      {"search_form": search_form, "stitle": "资产入库", "asset_detail_info_form": asset_detail_info_form,
+                       'asset_in_form': asset_in_form,'asset_id':asset_id})
+
+    @method_decorator(login_required)
+    def post(self,request,*args,**kwargs):
+
+        response = BaseResponse()
+
+        #获取入库前的资产详细信息
+        req_data = json.loads(request.body.decode('utf-8'))
+        print(req_data)
+        get_before_asset_info = requests.get(
+            "http://127.0.0.1:8000/asset_manage/asset_manage/id/%s/" % req_data[
+                'asset_id_field'])
+        before_asset_info = {}
+        before_asset_info_data = json.loads(json.loads(get_before_asset_info.content.decode("utf-8"))['data'])[
+            'data_back']
+        current_asset_info_stitle = json.loads(json.loads(get_before_asset_info.content.decode("utf-8"))['data'])[
+            'stitles']
+        for en_title, ch_title in current_asset_info_stitle.items():
+            for k, v in before_asset_info_data.items():
+                if k == en_title:
+                    before_asset_info[ch_title] = v
+                else:
+                    continue
+        try:
+            update_filds_dict = {}
+            update_filds_dict['operator_id'] = UserProfile.objects.filter(username=request.user.username).values()[0]["id"]
+            update_filds_dict['owner_id'] = UserProfile.objects.filter(username=request.user.username).values()[0]["id"]
+            update_filds_dict['user_name_id'] = UserProfile.objects.filter(username=req_data['admin_name_field']).values()[0]["id"]
+            update_filds_dict['asset_status_id'] = req_data['asset_status_field']
+            update_filds_dict['remark'] = req_data['remark_info']
+            update_filds_dict['in_out_reason_id'] = req_data['in_reason_field']
+            update_filds_dict['store_place_id'] = req_data['store_place_field']
+            update_filds_dict['office_place_id'] = StorePlace.objects.filter(id=req_data['store_place_field']).values()[0]["office_place_id"]
+            update_filds_dict['update_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
+            AssetInfo.objects.filter(asset_id=req_data['asset_id_field']).update(**update_filds_dict)
+
+
+            get_current_asset_info = requests.get("http://127.0.0.1:8000/asset_manage/asset_manage/id/%s/" %req_data['asset_id_field'])     #获取入库后的资产详情，将其写入OperationLogs数据表
+            current_asset_info = {}
+            current_asset_info_data = json.loads(json.loads(get_current_asset_info.content.decode("utf-8"))['data'])[ 'data_back']
+            current_asset_info_stitle = json.loads(json.loads(get_current_asset_info.content.decode("utf-8"))['data'])[ 'stitles']
+            for en_title,ch_title in current_asset_info_stitle.items():
+                for k,v in current_asset_info_data.items():
+                    if k == en_title:
+                        current_asset_info[ch_title] = v
+                    else:
+                        continue
+            operation_record = {"asset_id": req_data['asset_id_field'], "type": "0", 'before_field': before_asset_info, "after_field": current_asset_info,'operator': request.user}
+            OperationLogs.objects.create(**operation_record)
+            response.data = {'resp':"ok"}
+        except Exception as e:
+            response.status = False
+            response.message = str(e)
+        return HttpResponse(json.dumps(response.__dict__))
+
+class Batch_stock_in(View):
+    '''新增批量入库'''
+    def post(self,request,*args,**kwargs):
+        upload_file = request.FILES
+        model_field = []
+        for i in AssetInfo._meta._get_fields():
+            model_field.append(i.name)
+        model_field.remove('last_check_time')
+        model_field.remove('update_time')
+        model_field.remove('operator')
+        model_field.remove('user_name')
+        print(model_field)
+        wb = xlrd.open_workbook(filename=None,file_contents=upload_file['file[0]'].read())
+        sheet = wb.sheet_by_name('AssetInfo')
+        #构建入库日志,before_field字段
+        before_asset_info = {}
+        for i in AssetInfo._meta._get_fields():
+            before_asset_info[i.verbose_name] = ""
+
+        row = sheet.nrows
+
+        for i in range(1,row):
+            row_vals = sheet.row_values(i)
+            row_vals[18] = xlrd.xldate_as_datetime(sheet.cell(i,18).value,0)
+            row_vals[19] = xlrd.xldate_as_datetime(sheet.cell(i,19).value, 0)
+            row_vals[20] = xlrd.xldate_as_datetime(sheet.cell(i,20).value, 0)
+
+            asset_dict = dict(zip(model_field,row_vals))
+
+            create_assetinfo_dict = {}
+            create_assetinfo_dict['asset_id'] = asset_dict['asset_id']
+            create_assetinfo_dict['sn'] = asset_dict['sn']
+            create_assetinfo_dict['mac_addr'] = asset_dict['mac_addr']
+            create_assetinfo_dict['level_id'] = Level.objects.filter(level_name=asset_dict['level']).values()[0]['id']
+            create_assetinfo_dict['asset_attr_id'] = AssetAttr.objects.filter(asset_attr=asset_dict['asset_attr']).values()[0]['id']
+            create_assetinfo_dict['asset_model_id'] = AssetModel.objects.filter(asset_model=asset_dict['asset_model']).values()[0]['id']
+            create_assetinfo_dict['asset_provider_id'] = AssetProvider.objects.filter(provider=asset_dict['asset_provider']).values()[0]['id']
+            create_assetinfo_dict['device_model_id'] = DeviceModel.objects.filter(model_name=asset_dict['device_model']).values()[0]['id']
+            create_assetinfo_dict['product_conf_id'] = ProductConf.objects.filter(product_conf=asset_dict["product_conf"]).values()[0]['id']
+            create_assetinfo_dict['asset_name_id'] = AssetName.objects.filter(asset_name=asset_dict['asset_name']).values()[0]['id']
+            create_assetinfo_dict['office_place_id'] = OfficePlace.objects.filter(office_place=asset_dict['office_place']).values()[0]['id']
+            create_assetinfo_dict['store_place_id'] = StorePlace.objects.filter(store_place=asset_dict['store_place']).values()[0]['id']
+            create_assetinfo_dict['use_type_id'] = UseType.objects.filter(use_type=asset_dict['use_type']).values()[0]['id']
+            create_assetinfo_dict['asset_status_id'] = AssetStatus.objects.filter(asset_status=asset_dict['asset_status']).values()[0]['id']
+            create_assetinfo_dict['in_out_reason_id'] = InOutReasons.objects.filter(in_out_reasons=asset_dict['in_out_reason']).values()[0]['id']
+            create_assetinfo_dict['supplier_id'] = Supplier.objects.filter(supplier=asset_dict['supplier']).values()[0]['id']
+            create_assetinfo_dict['last_check_time_id'] = '1'
+            create_assetinfo_dict['user_name_id'] = UserProfile.objects.filter(username='admin').values()[0]['id']
+            create_assetinfo_dict['owner_id'] = UserProfile.objects.filter(username=request.user).values()[0]['id']
+            create_assetinfo_dict['operator_id']  = UserProfile.objects.filter(username=request.user).values()[0]['id']
+            create_assetinfo_dict['company_info'] = asset_dict['company_info']
+            create_assetinfo_dict['buy_time'] = asset_dict['buy_time']
+            create_assetinfo_dict['create_time'] = asset_dict['create_time']
+            create_assetinfo_dict['update_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            create_assetinfo_dict['up_time'] = asset_dict['up_time']
+            create_assetinfo_dict['remark'] = asset_dict['remark']
+
+
+            #
+            AssetInfo.objects.create(**create_assetinfo_dict)
+            # 获取after_field字段信息
+            get_current_asset_info = requests.get(
+                "http://127.0.0.1:8000/asset_manage/asset_manage/id/%s/" % asset_dict['asset_id'])  # 获取入库后的资产详情，将其写入OperationLogs数据表
+            current_asset_info = {}
+            current_asset_info_data = json.loads(json.loads(get_current_asset_info.content.decode("utf-8"))['data'])[
+                'data_back']
+            current_asset_info_stitle = json.loads(json.loads(get_current_asset_info.content.decode("utf-8"))['data'])[
+                'stitles']
+            for en_title, ch_title in current_asset_info_stitle.items():
+                for k, v in current_asset_info_data.items():
+                    if k == en_title:
+                        current_asset_info[ch_title] = v
+                    else:
+                        continue
+            operation_record = {"asset_id": asset_dict['asset_id'], "type": "0", 'before_field': before_asset_info,
+                                "after_field": current_asset_info, 'operator': request.user}
+            OperationLogs.objects.create(**operation_record)
+
+        return HttpResponse(request.FILES)
